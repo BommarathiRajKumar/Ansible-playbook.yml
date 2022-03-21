@@ -1,0 +1,70 @@
+#                                              DOCUMENT:-
+#===========================================================================================================
+
+
+
+ #Every managed node should contain python&ssh enable because ansible all modules are developed with python.
+ #Before run this playbook we have to update the inventory file:-Inventory file path by default (/etc/ansible/hosts)  we have to update with ip's & usernames & (passwords or private key)      because to configure the os ansible take the inforamtion about that os from this file only (or) ansible can authenticat that particular os by the help of information provided in this file   only.
+ #we can change inventory file path by going into ansible conf file (vim /etc/ansible/ansible.cfg) go to this file and change the default path of inventory file to as your requirement.  
+
+
+
+ #syntax to update the inventory file:-
+  #use this syntax for password:-
+             #open the file (vim /etc/ansible/hosts) then update the file by this syntax:- 192.169.56.104  ansible_user=<username>  ansible_password=<password>  
+  #use this syntax for password less authetication:-
+             #open the file (vim /etc/ansible/hosts) then update the file by this syntax:- 13.234.154.145 ansible_user=<username>  ansible_ssh_private_key_file=<path of private key>
+             #Note:- Bydefault ansible look for privatekey at this location (/root/.ssh) if private key is not in this location use above keyword (ansible_ssh_private_key_file=<path of                      privatekey>) to give the loaction of private key for ansible, if private key have in the default location then no need to use above keyword in the inventory file.
+
+
+
+ #we can write multiple groups of ip's in inventory file (by giving unique name to each group). 
+  # syntax to write group ip's in inventory file:-
+ 
+  #           [webserversetup]
+  #           192.165.18.14  ansible_user=<username  (ansible_password=<password>  or ansible_ssh_private_key_file=<path of private key>)
+  #           192.145.168.1. ansible_user=<username  (ansible_password=<password>  or ansible_ssh_private_key_file=<path of private key>)
+ 
+  #           [dockersetup]
+  #           192.156.15.16  ansible_user=<username  (ansible_password=<password>  or ansible_ssh_private_key_file=<path of private key>)
+  #           192.186.154.13 ansible_user=<username  (ansible_password=<password>  or ansible_ssh_private_key_file=<path of private key>)
+ 
+ 
+  # As per requrement we can use that particular group name in playbook code " -hosts: webserver " if we use this syntax  then the  ip's which are in that particular group can configure         has webserver and ansible not touch other group ip's.
+
+
+
+#                            WEBSERVER CONFIGURATION WITH ANSIBLE (YAML CODE):-
+#===========================================================================================================
+- hosts: all
+  vars:
+          software_Name: "httpd"
+
+  tasks:
+  - name: "Installing httpd software..."
+    package:
+       name: "{{software_Name}}"
+       state: present
+  - name: "copying web pages (or) deploying web pages from source to destination folder of webserver..."
+    copy: 
+       dest: "/var/www/html" 
+       src: "/webhtml/wellcome.html"
+  - name: "starting httpd service..."
+    service: 
+       name: "{{software_Name}}"  
+       state: started  
+       enabled: yes
+  - name: "writing permanent rules for firewall to allow outside guys to connect to the port number:80 of webserver..."
+    firewalld: 
+       immediate: yes 
+       port: "80/tcp"  
+       state: enabled  
+       permanent: yes
+
+
+
+ # This firewall rule is permanent by the keyword of 'permanent: yes' if you make it permanent after os reboot also the firewall rules remains enable, if you make 'permanent: no' the           firewall rules become temporary and after os reboot the firewall rules will disabled.
+       
+ # NOTE:- To run this code use this cmd:- ansible-playbook  <file_Name>   
+ #  Here file_Name is:- webserver-config-with-ansible.yml
+
